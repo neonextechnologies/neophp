@@ -180,23 +180,83 @@ if (!function_exists('session')) {
 }
 
 if (!function_exists('cache')) {
-    function cache(string $key = null, $value = null, int $ttl = 3600)
+    function cache($key = null, $value = null, $seconds = 3600)
     {
-        static $cacheInstance;
+        $cache = app(\NeoPhp\Cache\Cache::class);
 
-        if ($cacheInstance === null) {
-            $cacheInstance = new \NeoPhp\Cache\Cache(storage_path('cache'));
+        if (is_null($key)) {
+            return $cache;
         }
 
-        if ($key === null) {
-            return $cacheInstance;
+        if (is_null($value)) {
+            return $cache->get($key);
         }
 
-        if ($value === null) {
-            return $cacheInstance->get($key);
+        return $cache->put($key, $value, $seconds);
+    }
+}
+
+if (!function_exists('session')) {
+    function session($key = null, $default = null)
+    {
+        $session = app(\NeoPhp\Session\Session::class);
+
+        if (is_null($key)) {
+            return $session;
         }
 
-        $cacheInstance->put($key, $value, $ttl);
-        return $value;
+        return $session->get($key, $default);
+    }
+}
+
+if (!function_exists('logger')) {
+    function logger($message = null, array $context = [])
+    {
+        $logger = app(\NeoPhp\Logging\Logger::class);
+
+        if (is_null($message)) {
+            return $logger;
+        }
+
+        return $logger->info($message, $context);
+    }
+}
+
+if (!function_exists('storage')) {
+    function storage()
+    {
+        return app(\NeoPhp\Storage\Storage::class);
+    }
+}
+
+if (!function_exists('event')) {
+    function event(string $event, $payload = null)
+    {
+        return \NeoPhp\Events\EventDispatcher::dispatch($event, $payload);
+    }
+}
+
+if (!function_exists('queue')) {
+    function queue()
+    {
+        return app(\NeoPhp\Queue\Queue::class);
+    }
+}
+
+if (!function_exists('mail')) {
+    function mail()
+    {
+        return app(\NeoPhp\Mail\Mailer::class);
+    }
+}
+
+if (!function_exists('benchmark')) {
+    function benchmark(string $name, callable $callback = null)
+    {
+        if (is_null($callback)) {
+            return \NeoPhp\Performance\Benchmark::class;
+        }
+
+        return \NeoPhp\Performance\Benchmark::measure($name, $callback);
     }
 }
