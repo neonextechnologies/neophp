@@ -1,0 +1,64 @@
+{
+    "name": "neonex/neophp",
+    "description": "NeoPhp - A Modern PHP Core Framework inspired by Neonex",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Neonex Team"
+        }
+    ],
+    "require": {
+        "php": ">=8.0",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "suggest": {
+        "ext-pdo_mysql": "For MySQL database support",
+        "ext-pdo_pgsql": "For PostgreSQL database support",
+        "ext-pdo_sqlite": "For SQLite database support",
+        "ext-pdo_sqlsrv": "For SQL Server database support",
+        "mongodb/mongodb": "For MongoDB support",
+        "predis/predis": "For Redis support"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "NeoPhp\\Core\\": "src/Core/",
+            "NeoPhp\\Http\\": "src/Http/",
+            "NeoPhp\\Routing\\": "src/Routing/",
+            "NeoPhp\\Config\\": "src/Config/",
+            "NeoPhp\\Container\\": "src/Container/",
+            "NeoPhp\\Database\\": "src/Database/",
+            "NeoPhp\\Console\\": "src/Console/",
+            "NeoPhp\\View\\": "src/View/",
+            "NeoPhp\\Validation\\": "src/Validation/",
+            "NeoPhp\\Auth\\": "src/Auth/",
+            "NeoPhp\\Cache\\": "src/Cache/",
+            "NeoPhp\\Events\\": "src/Events/",
+            "NeoPhp\\Queue\\": "src/Queue/",
+            "NeoPhp\\Session\\": "src/Session/",
+            "NeoPhp\\Logging\\": "src/Logging/",
+            "NeoPhp\\Storage\\": "src/Storage/",
+            "NeoPhp\\Performance\\": "src/Performance/",
+            "NeoPhp\\Security\\": "src/Security/",
+            "NeoPhp\\Mail\\": "src/Mail/",
+            "App\\": "app/"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "bin": [
+        "neophp"
+    ],
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
