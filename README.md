@@ -76,11 +76,14 @@ Laravel: 120-180ms 🐢
 ### 🔐 Security & Auth
 
 - **Authentication** - Session-based with bcrypt
-- **Validation** - 12+ rules with custom messages
+- **Validation** - 15+ rules with custom messages
 - **CSRF Protection** - Token generation & validation
 - **XSS Protection** - Auto-escaping
 - **Rate Limiting** - Request throttling
 - **Middleware Stack** - Request pipeline
+- **RBAC** - Role-Based Access Control
+- **Permissions** - Fine-grained access control
+- **JWT Authentication** - Token-based API auth
 
 ### 🚀 Advanced Features
 
@@ -93,6 +96,9 @@ Laravel: 120-180ms 🐢
 - **Mail System** - Email sending
 - **Performance Monitoring** - Benchmark tools
 - **CORS Support** - Cross-origin requests
+- **Pagination** - Bootstrap-styled paginator
+- **Task Scheduler** - Cron-like scheduling
+- **File Upload Validation** - Size & mime type checks
 
 ### 🛠️ Developer Tools
 
@@ -239,6 +245,17 @@ app/Modules/
 $user = User::find(1);
 $users = User::where('status', 'active')->get();
 
+// Pagination
+$users = User::paginate(15); // 15 per page
+$users = User::paginate(25, 2); // 25 per page, page 2
+
+// Display in view
+foreach ($users->items() as $user) {
+    echo $user->name;
+}
+
+echo $users->links(); // Render pagination links
+
 // Create
 $user = User::create([
     'name' => 'John Doe',
@@ -277,6 +294,168 @@ class UserRepository extends Repository
     {
         return $this->findBy('email', $email);
     }
+    
+    public function paginateActive(int $perPage = 15)
+    {
+        // Custom pagination with filters
+        return $this->paginate($perPage);
+    }
+}
+```
+
+### Pagination System
+
+```php
+// In Controller
+$users = User::paginate(15);
+$users = $userRepository->paginate(25);
+
+// In Blade View
+<div class="users">
+    @foreach($users->items() as $user)
+        <div>{{ $user->name }}</div>
+    @endforeach
+</div>
+
+{{ $users->links() }}
+
+// API Response
+return JsonResponse::success($users->toArray());
+// Returns: { data: [...], current_page: 1, last_page: 5, ... }
+```
+
+### Role-Based Access Control (RBAC)
+
+```php
+// Assign Role
+auth()->user()->assignRole('admin');
+auth()->user()->assignRole('editor');
+
+// Check Role
+if (auth()->user()->hasRole('admin')) {
+    // Admin only
+}
+
+// Check Permission
+if (auth()->user()->can('edit-posts')) {
+    // User has permission
+}
+
+// In Blade
+@can('edit-posts')
+    <button>Edit</button>
+@endcan
+
+// Middleware
+class AdminMiddleware extends Middleware {
+    public function handle($request, $next) {
+        if (!auth()->user()->hasRole('admin')) {
+            return redirect('/');
+        }
+        return $next($request);
+    }
+}
+
+// Create Roles & Permissions
+$role = new Role(app('db'));
+$roleId = $role->create('editor', [
+    'create-posts',
+    'edit-posts',
+    'delete-posts'
+]);
+```
+
+### JWT API Authentication
+
+```php
+// Login & Get Token
+$jwt = new JWT(env('JWT_SECRET'));
+$apiAuth = new ApiAuth($jwt, app('db'));
+
+$token = $apiAuth->attempt([
+    'email' => 'user@example.com',
+    'password' => 'password'
+]);
+
+// Returns: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+// Validate Token
+if ($apiAuth->check($token)) {
+    $user = $apiAuth->user($token);
+}
+
+// Refresh Token
+$newToken = $apiAuth->refresh($token, 7200); // 2 hours
+
+// API Middleware
+class JWTMiddleware extends Middleware {
+    public function handle($request, $next) {
+        $token = $request->header('Authorization');
+        $token = str_replace('Bearer ', '', $token);
+        
+        $apiAuth = app(ApiAuth::class);
+        
+        if (!$apiAuth->check($token)) {
+            return JsonResponse::error('Unauthorized', 401);
+        }
+        
+        $request->user = $apiAuth->user($token);
+        return $next($request);
+    }
+}
+```
+
+### Task Scheduler
+
+```php
+// routes/schedule.php or bootstrap/schedule.php
+use NeoPhp\Schedule\Schedule;
+
+// Every minute
+Schedule::command('emails:send')->everyMinute();
+
+// Hourly
+Schedule::call(function() {
+    logger()->info('Hourly task executed');
+})->hourly();
+
+// Daily at specific time
+Schedule::command('reports:generate')
+    ->dailyAt('03:00')
+    ->description('Generate daily reports');
+
+// Weekly
+Schedule::call(function() {
+    // Cleanup old logs
+})->weekly();
+
+// Custom cron expression
+Schedule::command('backup:run')
+    ->cron('0 2 * * *'); // 2 AM every day
+
+// Run scheduler (add to cron)
+// * * * * * php /path/to/neophp schedule:run >> /dev/null 2>&1
+```
+
+### File Upload Validation
+
+```php
+// Validation with file rules
+$validator = validator($_POST + $_FILES, [
+    'avatar' => 'required|file|mimes:jpg,jpeg,png|max:2048', // Max 2MB
+    'document' => 'file|mimes:pdf,doc,docx|max:5120' // Max 5MB
+]);
+
+if ($validator->fails()) {
+    return JsonResponse::error('Validation failed', 422, $validator->errors());
+}
+
+// Store file
+if ($validator->passes()) {
+    $path = storage()->putFile('uploads/avatars', $_FILES['avatar']);
+    
+    $user->avatar = $path;
+    $user->save();
 }
 ```
 
@@ -688,6 +867,10 @@ composer require stripe/stripe-php
 | **Multi-DB Support** | ✅ 7 types | ✅ 5 types | ✅ Many |
 | **Edge DB (Turso)** | ✅ | ❌ | ❌ |
 | **Blade Templates** | ✅ Fast | ✅ Standard | ❌ Twig |
+| **RBAC** | ✅ Built-in | ✅ Package | ✅ Built-in |
+| **JWT Auth** | ✅ Built-in | ❌ Package | ✅ Package |
+| **Pagination** | ✅ Built-in | ✅ Built-in | ✅ Built-in |
+| **Task Scheduler** | ✅ Built-in | ✅ Built-in | ❌ Bundle |
 | **Learning Curve** | Low ⚡ | Medium | High |
 | **Best For** | APIs, Microservices | Full-stack | Enterprise |
 

@@ -22,6 +22,40 @@ CREATE TABLE IF NOT EXISTS `jobs` (
   KEY `jobs_queue_index` (`queue`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Roles Table
+CREATE TABLE IF NOT EXISTS `roles` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL UNIQUE,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Permissions Table
+CREATE TABLE IF NOT EXISTS `permissions` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL UNIQUE,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Role Permissions Table
+CREATE TABLE IF NOT EXISTS `role_permissions` (
+  `role_id` int(11) unsigned NOT NULL,
+  `permission_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`role_id`, `permission_id`),
+  FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- User Roles Table
+CREATE TABLE IF NOT EXISTS `user_roles` (
+  `user_id` int(11) unsigned NOT NULL,
+  `role_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`user_id`, `role_id`),
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Sample data
 INSERT INTO users (name, email, status) VALUES
 ('John Doe', 'john@example.com', 'active'),

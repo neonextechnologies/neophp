@@ -99,6 +99,12 @@ class Validator
 
     protected function validateMax(string $field, $value, $parameter): bool
     {
+        // Check if it's a file upload
+        if (isset($_FILES[$field])) {
+            // File size in KB
+            return $_FILES[$field]['size'] <= ((int) $parameter * 1024);
+        }
+
         if (is_numeric($value)) {
             return $value <= (float) $parameter;
         }
@@ -147,6 +153,24 @@ class Validator
     {
         $confirmField = $field . '_confirmation';
         return isset($this->data[$confirmField]) && $value === $this->data[$confirmField];
+    }
+
+    protected function validateFile(string $field, $value, $parameter): bool
+    {
+        return isset($_FILES[$field]) && $_FILES[$field]['error'] === UPLOAD_ERR_OK;
+    }
+
+    protected function validateMimes(string $field, $value, $parameter): bool
+    {
+        if (!isset($_FILES[$field])) {
+            return false;
+        }
+
+        $file = $_FILES[$field];
+        $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+        $allowedTypes = is_array($parameter) ? $parameter : explode(',', $parameter);
+
+        return in_array($extension, $allowedTypes);
     }
 
     protected function addError(string $field, string $rule, $parameter): void

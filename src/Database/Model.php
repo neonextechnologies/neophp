@@ -191,4 +191,28 @@ abstract class Model
 
         return static::find($this->attributes[static::$primaryKey]);
     }
+
+    public static function paginate(int $perPage = 15, int $page = null): \NeoPhp\Pagination\Paginator
+    {
+        $page = $page ?? (int) ($_GET['page'] ?? 1);
+        $offset = ($page - 1) * $perPage;
+        
+        $db = static::getConnection();
+        
+        // Get total count
+        $totalResult = $db->query("SELECT COUNT(*) as total FROM " . static::$table);
+        $total = (int) $totalResult[0]['total'];
+        
+        // Get items
+        $results = $db->query(
+            "SELECT * FROM " . static::$table . " LIMIT ? OFFSET ?",
+            [$perPage, $offset]
+        );
+        
+        $items = array_map(function ($item) {
+            return new static($item);
+        }, $results);
+        
+        return new \NeoPhp\Pagination\Paginator($items, $total, $perPage, $page);
+    }
 }

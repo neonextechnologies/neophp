@@ -67,22 +67,21 @@ abstract class Repository
         return $this->find($id) !== null;
     }
 
-    public function paginate(int $page = 1, int $perPage = 15): array
+    public function paginate(int $perPage = 15, int $page = null): \NeoPhp\Pagination\Paginator
     {
+        $page = $page ?? (int) ($_GET['page'] ?? 1);
         $offset = ($page - 1) * $perPage;
         
-        $sql = "SELECT * FROM {$this->table} LIMIT {$perPage} OFFSET {$offset}";
-        $items = $this->db->query($sql);
-        
+        // Get total count
         $total = $this->count();
         
-        return [
-            'data' => $items,
-            'current_page' => $page,
-            'per_page' => $perPage,
-            'total' => $total,
-            'last_page' => ceil($total / $perPage),
-        ];
+        // Get items
+        $items = $this->db->query(
+            "SELECT * FROM {$this->table} LIMIT ? OFFSET ?",
+            [$perPage, $offset]
+        );
+        
+        return new \NeoPhp\Pagination\Paginator($items, $total, $perPage, $page);
     }
 
     protected function query(string $sql, array $params = []): array

@@ -260,3 +260,17 @@ if (!function_exists('benchmark')) {
         return \NeoPhp\Performance\Benchmark::measure($name, $callback);
     }
 }
+
+if (!function_exists('paginate')) {
+    function paginate(array $items, int $total, int $perPage = 15, int $currentPage = 1)
+    {
+        return new \NeoPhp\Pagination\Paginator($items, $total, $perPage, $currentPage);
+    }
+}
+
+if (!function_exists('schedule')) {
+    function schedule()
+    {
+        return \NeoPhp\Schedule\Schedule::class;
+    }
+}

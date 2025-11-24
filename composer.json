@@ -45,6 +45,8 @@
             "NeoPhp\\Performance\\": "src/Performance/",
             "NeoPhp\\Security\\": "src/Security/",
             "NeoPhp\\Mail\\": "src/Mail/",
+            "NeoPhp\\Pagination\\": "src/Pagination/",
+            "NeoPhp\\Schedule\\": "src/Schedule/",
             "App\\": "app/"
         },
         "files": [
