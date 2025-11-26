@@ -1,16 +1,16 @@
-# 🚀 NeoPhp - Modern PHP Framework
+# 🚀 NeoPhp - Foundation Framework
 
 <div align="center">
 
 ![PHP Version](https://img.shields.io/badge/PHP-8.0%20to%208.4-777BB4?style=flat-square&logo=php)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
-![Performance](https://img.shields.io/badge/Performance-3--5x%20Faster-brightgreen?style=flat-square)
-![Size](https://img.shields.io/badge/Size-Lightweight-blue?style=flat-square)
+![Architecture](https://img.shields.io/badge/Architecture-Foundation-purple?style=flat-square)
+![Type](https://img.shields.io/badge/Type-Metadata%20Driven-orange?style=flat-square)
 
-**A blazing-fast, modern PHP framework inspired by NestJS and Laravel**  
-*Built for performance, simplicity, and scalability*
+**A foundation framework for building full-featured PHP frameworks**  
+*Contract-first architecture with metadata-driven development*
 
-[Features](#-features) • [Installation](#-quick-start) • [Documentation](#-documentation) • [Benchmarks](#-performance)
+[Features](#-features) • [CLI Tools](#-cli-tools) • [Documentation](#-documentation) • [Foundation Guide](FOUNDATION_GUIDE.md)
 
 </div>
 
@@ -18,86 +18,207 @@
 
 ## 📖 Overview
 
-**NeoPhp** is a full-featured PHP 8+ framework that combines the best of both worlds:
-- 🎯 **Module System** from NestJS (TypeScript)
-- 🎨 **MVC Architecture** from Laravel (PHP)
-- ⚡ **Performance** 3-5x faster than Laravel
-- 🪶 **Lightweight** ~70 files vs Laravel's 1000+
+**NeoPhp** is a **Foundation Framework** (like Neonex Core) - not a full framework, but a solid foundation for building one:
 
-### Why NeoPhp?
+- 🏗️ **Foundation Layer** - Contract-first architecture with pure interfaces
+- 🔌 **Plugin System** - Extensible with WordPress-style hooks
+- 🎯 **Service Providers** - Deferred loading and dependency management
+- 📝 **Metadata-Driven** - PHP 8 Attributes for declarative development
+- 🛠️ **CLI Tools** - Code generation and migration system (`php neo`)
+- ⚡ **Performance** - Lightweight and modular design
 
-```php
-// Bootstrap Time
-NeoPhp:  5-10ms  ⚡
-Laravel: 50-100ms 🐢
+### Foundation vs Full Framework
 
-// Memory Usage
-NeoPhp:  2-4MB   ⚡
-Laravel: 10-20MB 🐢
+```
+Traditional Full Framework (Laravel, Symfony):
+└─ Everything built-in (Monolithic)
 
-// Request Time (with DB query)
-NeoPhp:  25-35ms  ⚡
-Laravel: 120-180ms 🐢
+NeoPhp Foundation Framework:
+├─ Pure Contracts (Interfaces only)
+├─ Service Providers (Modular services)
+├─ Plugin Architecture (Extensible)
+├─ Metadata System (Declarative)
+└─ CLI Tools (Code generation)
+    └─ Build Your Framework On Top
+
+Use Cases:
+✅ Build custom frameworks for specific needs
+✅ Create modular applications with plugins
+✅ Metadata-driven CRUD generators
+✅ Rapid prototyping with CLI tools
 ```
 
 ---
 
 ## ✨ Features
 
-### 🎯 Core Framework
+### 🏗️ Foundation Architecture
 
-- **Dependency Injection** - Auto-resolve with reflection
-- **Module System** - NestJS-style with PHP 8 Attributes
-- **Attribute Routing** - `#[Get]`, `#[Post]`, `#[Controller]`
-- **Auto-Discovery** - Automatic module loading
-- **PSR-4 Autoloading** - Industry standard
+**Contract-First Design:**
+- **10 Pure Interfaces** - Database, Cache, Queue, Logger, Storage, Mailer, Validator, ServiceProvider, Plugin, Metadata
+- **No Implementation Lock-in** - Swap implementations easily
+- **Testable** - Mock interfaces for unit tests
 
-### 🗄️ Database Layer
+**Service Provider System:**
+```php
+class PaymentServiceProvider extends ServiceProvider
+{
+    public function register(): void {
+        $this->app->singleton('payment', fn() => new StripePayment());
+    }
+    
+    public function boot(): void {
+        // Bootstrap services
+    }
+}
+```
+- Auto-discovery from `app/Providers/`
+- Deferred loading for performance
+- Dependency resolution
 
-- **Multi-Database Support**
-  - MySQL, PostgreSQL, SQLite
-  - SQL Server, Turso (Edge DB)
-  - MongoDB, Redis
-- **Eloquent-like ORM** - Active Record pattern
+### 🔌 Plugin Architecture
+
+**WordPress-Style Hooks:**
+```php
+// Add action hook
+HookManager::addAction('user.created', function($user) {
+    Mail::send($user->email, 'Welcome!');
+});
+
+// Add filter hook
+HookManager::addFilter('response.headers', function($headers) {
+    $headers['X-Powered-By'] = 'NeoPhp';
+    return $headers;
+});
+
+// Trigger hooks
+HookManager::doAction('user.created', $user);
+$headers = HookManager::applyFilters('response.headers', $headers);
+```
+
+**Plugin System:**
+- Install/Uninstall lifecycle
+- Activate/Deactivate state
+- Dependency management
+- Service provider integration
+
+### 📝 Metadata-Driven Development
+
+**PHP 8 Attributes for Models:**
+```php
+#[Table(name: 'products')]
+class Product extends Model
+{
+    #[Field(
+        type: 'varchar',
+        length: 255,
+        required: true,
+        min: 3,
+        max: 100,
+        label: 'Product Name',
+        inputType: 'text'
+    )]
+    public string $name;
+
+    #[Field(
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        required: true,
+        min: 0,
+        label: 'Price',
+        inputType: 'number'
+    )]
+    public float $price;
+
+    #[HasMany(target: Category::class)]
+    public array $categories;
+}
+```
+
+**Dynamic Form Generation:**
+```php
+// Generate form from metadata
+$form = form()->make(Product::class);
+echo $form->render();
+
+// Auto-validation from metadata
+$validator = metadata()->validate(Product::class, $request->all());
+```
+
+**Relationships:**
+- `#[HasOne]`, `#[HasMany]`
+- `#[BelongsTo]`, `#[BelongsToMany]`
+- `#[MorphTo]`, `#[MorphOne]`, `#[MorphMany]`
+
+### 🛠️ CLI Tools (`php neo`)
+
+**Code Generators:**
+```bash
+php neo make:controller UserController
+php neo make:model Product -m
+php neo make:migration create_orders_table
+php neo make:middleware AuthMiddleware
+php neo make:provider PaymentServiceProvider
+php neo make:plugin Blog
+php neo make:command ProcessDataCommand
+```
+
+**Migration System:**
+```bash
+php neo migrate                    # Run migrations
+php neo migrate:rollback          # Rollback last batch
+php neo migrate:status            # Show status
+php neo migrate:refresh           # Reset + re-run
+php neo migrate:fresh             # Drop all + re-run
+```
+
+**Schema Builder:**
+```php
+Schema::create('products', function (Blueprint $table) {
+    $table->id();
+    $table->string('name');
+    $table->decimal('price', 10, 2);
+    $table->text('description');
+    $table->timestamps();
+    
+    // Indexes
+    $table->index('name');
+    $table->unique('sku');
+    
+    // Foreign keys
+    $table->foreign('category_id')
+        ->references('id')
+        ->on('categories')
+        ->onDelete('CASCADE');
+});
+```
+
+**Other Commands:**
+```bash
+php neo serve                     # Development server
+php neo cache:clear              # Clear cache
+php neo db:seed                  # Run seeders
+php neo plugin:list              # List plugins
+```
+
+### 🗄️ Database Layer (Optional)
+
+Built on foundation contracts - use what you need:
+- **Multi-Database Support** - MySQL, PostgreSQL, SQLite, SQL Server
 - **Query Builder** - Fluent interface
-- **Repository Pattern** - Clean data abstraction
-- **Migration System** - Schema builder
+- **Migration System** - Schema versioning
+- **Active Record ORM** - Eloquent-style models
 
-### 🎨 View & Templates
+### 🎨 Additional Components (Optional)
 
-- **Blade Template Engine**
-  - `@extends`, `@section`, `@yield`
-  - `@if`, `@foreach`, `@while`
-  - `{{ }}` escaped, `{!! !!}` raw
-  - `@auth`, `@guest` directives
-- **Fast Compilation** - File-based caching
-- **Layouts & Sections** - Template inheritance
-
-### 🔐 Security & Auth
-
-- **Authentication** - Session-based with bcrypt
-- **Validation** - 15+ rules with custom messages
-- **CSRF Protection** - Token generation & validation
-- **XSS Protection** - Auto-escaping
-- **Rate Limiting** - Request throttling
-- **Middleware Stack** - Request pipeline
-- **RBAC** - Role-Based Access Control
-- **Permissions** - Fine-grained access control
-- **JWT Authentication** - Token-based API auth
-
-### 🚀 Advanced Features
-
-- **Event System** - `listen()`, `dispatch()`
-- **Queue System** - Background jobs
-- **Session Management** - Flash messages
-- **Logging** - PSR-like logger
-- **File Storage** - Upload & management
-- **Cache System** - File or Redis driver
-- **Mail System** - Email sending
-- **Performance Monitoring** - Benchmark tools
-- **CORS Support** - Cross-origin requests
-- **Pagination** - Bootstrap-styled paginator
-- **Task Scheduler** - Cron-like scheduling
+- **HTTP Layer** - Request/Response/Router
+- **View Engine** - Blade-like templates
+- **Validation** - Rule-based with custom messages
+- **Cache** - File/Redis drivers
+- **Queue** - Background job processing
+- **Events** - Event dispatcher
+- **Auth** - Session/JWT authentication
 - **File Upload Validation** - Size & mime type checks
 
 ### 🛠️ Developer Tools
@@ -135,213 +256,487 @@ cp .env.example .env
 # Configure database in .env
 nano .env
 
-# Import database schema
-mysql -u root -p neophp < database/schema.sql
+# Run migrations
+php neo migrate
 
 # Start development server
-php -S localhost:8000 -t public
+php neo serve
 ```
 
 Visit: http://localhost:8000
 
-### Your First Route
+---
+
+## 📚 Usage Examples
+
+### 1. Service Provider Pattern
 
 ```php
-// routes/web.php
-use NeoPhp\Routing\Route;
-
-Route::get('/', function() {
-    return view('home', ['message' => 'Hello NeoPhp!']);
-});
-
-Route::get('/api/users', function() {
-    return JsonResponse::success(User::all());
-});
-```
-
-### Your First Module
-
-```php
-// app/Modules/Product/ProductModule.php
-#[Module(
-    controllers: [ProductController::class],
-    providers: [ProductService::class, ProductRepository::class]
-)]
-class ProductModule {}
-
-// app/Modules/Product/Controllers/ProductController.php
-#[Controller(prefix: '/api/products')]
-class ProductController
+// app/Providers/PaymentServiceProvider.php
+class PaymentServiceProvider extends ServiceProvider
 {
-    public function __construct(
-        private ProductService $service
-    ) {}
-    
-    #[Get('/')]
-    public function index()
+    public function register(): void
     {
-        return JsonResponse::success($this->service->getAll());
+        $this->app->singleton('payment', function ($app) {
+            return new StripePayment(
+                config('payment.stripe_key')
+            );
+        });
     }
     
-    #[Get('/{id}')]
-    public function show(int $id)
+    public function boot(): void
     {
-        return JsonResponse::success($this->service->find($id));
+        // Load config, routes, views
     }
     
-    #[Post('/')]
-    public function store(Request $request)
+    public function provides(): array
     {
-        $validator = validator($request->all(), [
-            'name' => 'required|string|min:3',
-            'price' => 'required|numeric|min:0'
-        ]);
-        
-        if ($validator->fails()) {
-            return JsonResponse::error('Validation failed', 422, $validator->errors());
-        }
-        
-        $product = $this->service->create($request->all());
-        return JsonResponse::created($product);
+        return ['payment'];
     }
 }
+
+// Usage
+$payment = app('payment');
+$payment->charge(100, 'usd', $token);
+```
+
+### 2. Plugin System
+
+```php
+// plugins/blog/BlogPlugin.php
+class BlogPlugin extends Plugin
+{
+    protected string $name = 'blog';
+    protected string $version = '1.0.0';
+    
+    public function boot(): void
+    {
+        // Add hooks
+        HookManager::addAction('app.boot', [$this, 'registerRoutes']);
+        HookManager::addFilter('menu.items', [$this, 'addMenuItem']);
+    }
+    
+    public function registerRoutes(): void
+    {
+        Route::get('/blog', [BlogController::class, 'index']);
+    }
+    
+    public function addMenuItem(array $items): array
+    {
+        $items[] = ['title' => 'Blog', 'url' => '/blog'];
+        return $items;
+    }
+}
+
+// CLI Usage
+php neo plugin:install blog
+php neo plugin:list
+```
+
+### 3. Metadata-Driven Model
+
+```php
+// app/Models/Product.php
+#[Table(name: 'products')]
+class Product extends Model
+{
+    #[Field(
+        type: 'varchar',
+        length: 255,
+        required: true,
+        min: 3,
+        max: 100,
+        label: 'Product Name'
+    )]
+    public string $name;
+
+    #[Field(
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        required: true,
+        min: 0,
+        label: 'Price'
+    )]
+    public float $price;
+
+    #[BelongsTo(target: Category::class)]
+    public ?Category $category;
+
+    #[HasMany(target: Review::class)]
+    public array $reviews;
+}
+
+// Generate form from metadata
+$form = form()->make(Product::class);
+echo $form->render();
+
+// Auto-validation
+$metadata = metadata()->getModelMetadata(Product::class);
+$rules = $metadata['validationRules'];
+```
+
+### 4. CLI Code Generation
+
+```bash
+# Create model with migration
+php neo make:model Product -m
+
+# Edit migration
+# database/migrations/2024_11_26_123456_create_products_table.php
+
+# Run migration
+php neo migrate
+
+# Create controller
+php neo make:controller ProductController
+
+# Create custom command
+php neo make:command ImportProductsCommand
+```
+
+### 5. Schema Builder
+
+```php
+// database/migrations/2024_11_26_123456_create_orders_table.php
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->onDelete('cascade');
+            $table->decimal('total', 10, 2);
+            $table->enum('status', ['pending', 'completed', 'cancelled']);
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+            
+            $table->index('status');
+            $table->index(['user_id', 'status']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('orders');
+    }
+};
 ```
 
 ---
 
 ## 📚 Documentation
 
-### Architecture Patterns
+### Core Documentation
 
-**1. Traditional MVC** (Laravel-style)
+- **[Foundation Guide](FOUNDATION_GUIDE.md)** - Complete foundation architecture guide
+- **[CLI Guide](CLI_GUIDE.md)** - Command-line tools reference
+- **[Metadata Guide](examples/MetadataExample.php)** - Metadata-driven development
+- **[Plugin Guide](examples/PluginExample.php)** - Plugin architecture
+
+### Key Concepts
+
+**1. Contract-First Architecture**
 ```
-app/
-├── Controllers/
-│   └── UserController.php
-├── Models/
-│   └── User.php
-└── Views/
-    └── users/
+All core services are defined as interfaces first:
+├── DatabaseInterface
+├── CacheInterface
+├── QueueInterface
+├── LoggerInterface
+├── StorageInterface
+└── ... (10 total)
+
+Benefits:
+✅ Easy to swap implementations
+✅ Testable (mock interfaces)
+✅ No vendor lock-in
 ```
 
-**2. Modular Monolith** (NestJS-style)
+**2. Service Provider Lifecycle**
 ```
-app/Modules/
-├── User/
-│   ├── UserModule.php
-│   ├── Controllers/
-│   │   └── UserController.php
-│   ├── Services/
-│   │   └── UserService.php
-│   └── Repositories/
-│       └── UserRepository.php
+Registration Phase:
+├── 1. Discover providers
+├── 2. Register bindings
+└── 3. Resolve dependencies
+
+Boot Phase:
+├── 1. Boot non-deferred providers
+└── 2. Boot deferred providers on-demand
 ```
 
-### Database Examples
+**3. Plugin Hook System**
+```
+Actions (fire and forget):
+do_action('user.created', $user);
 
-**ORM (Eloquent-like):**
+Filters (modify and return):
+$headers = apply_filters('response.headers', $headers);
+```
+
+**4. Metadata Repository**
+```
+Parse once, cache forever:
+├── Reflection-based parsing
+├── File-based caching
+└── Auto-invalidation on changes
+```
+---
+
+## 🏗️ Project Structure
+
+```
+neophp/
+├── neo                          # CLI Runner (php neo)
+├── src/
+│   ├── Contracts/              # Pure Interfaces (10 contracts)
+│   │   ├── DatabaseInterface.php
+│   │   ├── CacheInterface.php
+│   │   └── ...
+│   ├── Foundation/             # Service Provider System
+│   │   ├── ServiceProvider.php
+│   │   ├── ProviderManager.php
+│   │   └── Providers/
+│   ├── Plugin/                 # Plugin Architecture
+│   │   ├── Plugin.php
+│   │   ├── PluginManager.php
+│   │   └── HookManager.php
+│   ├── Metadata/               # Metadata System
+│   │   ├── Table.php
+│   │   ├── Field.php
+│   │   ├── Relations.php
+│   │   └── MetadataRepository.php
+│   ├── Forms/                  # Dynamic Form Builder
+│   │   └── FormBuilder.php
+│   ├── Console/                # CLI Framework
+│   │   ├── Application.php
+│   │   ├── Command.php
+│   │   ├── Input.php
+│   │   ├── Output.php
+│   │   └── Commands/           # 20+ built-in commands
+│   ├── Generator/              # Code Generator
+│   │   ├── Generator.php
+│   │   └── stubs/              # 7 stub templates
+│   └── Database/
+│       ├── Migrations/         # Migration System
+│       │   ├── Migration.php
+│       │   └── Migrator.php
+│       └── Schema/             # Schema Builder
+│           ├── Schema.php
+│           ├── Blueprint.php
+│           ├── ColumnDefinition.php
+│           └── ForeignKeyDefinition.php
+├── app/
+│   ├── Controllers/            # Your controllers
+│   ├── Models/                 # Your models
+│   ├── Providers/              # Your service providers
+│   ├── Middleware/             # Your middleware
+│   └── Console/
+│       └── Commands/           # Your custom commands
+├── database/
+│   ├── migrations/             # Migration files
+│   └── seeders/                # Seeder files
+├── plugins/                    # Plugin directory
+├── config/                     # Configuration files
+├── public/                     # Web root
+├── storage/                    # Storage directory
+├── FOUNDATION_GUIDE.md         # Foundation architecture guide
+├── CLI_GUIDE.md                # CLI tools reference
+└── examples/                   # Working examples
+    ├── MetadataExample.php
+    └── PluginExample.php
+```
+
+---
+
+## 🎯 Use Cases
+
+### 1. Build Custom Framework
+Use NeoPhp as foundation to build your own framework:
+```
+Your Framework
+├── NeoPhp Foundation (Contracts + Providers + Plugins)
+├── Your Custom Services
+├── Your Domain Logic
+└── Your Business Rules
+```
+
+### 2. Metadata-Driven CRUD
+Generate admin panels from model metadata:
 ```php
-// Find
-$user = User::find(1);
-$users = User::where('status', 'active')->get();
+#[Table(name: 'products')]
+class Product extends Model { ... }
 
-// Pagination
-$users = User::paginate(15); // 15 per page
-$users = User::paginate(25, 2); // 25 per page, page 2
-
-// Display in view
-foreach ($users->items() as $user) {
-    echo $user->name;
-}
-
-echo $users->links(); // Render pagination links
-
-// Create
-$user = User::create([
-    'name' => 'John Doe',
-    'email' => 'john@example.com'
-]);
-
-// Update
-$user->name = 'Jane Doe';
-$user->save();
-
-// Delete
-$user->delete();
+// Auto-generate:
+- List page with DataTables
+- Create/Edit forms
+- Validation rules
+- API endpoints
 ```
 
-**Query Builder:**
-```php
-$users = $db->table('users')
-    ->where('status', 'active')
-    ->orderBy('created_at', 'DESC')
-    ->limit(10)
-    ->get();
+### 3. Plugin-Based Architecture
+Build extensible applications:
+```
+Core Application
+├── Authentication Plugin
+├── E-commerce Plugin
+├── Blog Plugin
+├── Analytics Plugin
+└── Custom Plugin
 ```
 
-**Repository Pattern:**
+### 4. Rapid Prototyping
+Quick development with CLI:
+```bash
+php neo make:model Order -m
+php neo make:controller OrderController
+php neo migrate
+php neo serve
+```
+
+---
+
+## 🔧 Advanced Topics
+
+### Custom Service Provider
+
 ```php
-class UserRepository extends Repository
+class ElasticsearchServiceProvider extends ServiceProvider
 {
-    protected $table = 'users';
-    
-    public function findActive()
+    public function register(): void
     {
-        return $this->findWhere(['status' => 'active']);
+        $this->app->singleton('elasticsearch', function ($app) {
+            return new ElasticsearchClient(
+                config('elasticsearch.hosts')
+            );
+        });
     }
     
-    public function findByEmail(string $email)
+    public function boot(): void
     {
-        return $this->findBy('email', $email);
+        // Register custom commands
+        if ($this->app->runningInConsole()) {
+            $this->app->registerCommand('es:reindex');
+        }
     }
     
-    public function paginateActive(int $perPage = 15)
+    public function isDeferred(): bool
     {
-        // Custom pagination with filters
-        return $this->paginate($perPage);
+        return true; // Load on-demand
+    }
+    
+    public function provides(): array
+    {
+        return ['elasticsearch'];
     }
 }
 ```
 
-### Pagination System
+### Custom Metadata Attribute
 
 ```php
-// In Controller
-$users = User::paginate(15);
-$users = $userRepository->paginate(25);
+#[Attribute(Attribute::TARGET_PROPERTY)]
+class Encrypted
+{
+    public function __construct(
+        public string $algorithm = 'AES-256-CBC'
+    ) {}
+}
 
-// In Blade View
-<div class="users">
-    @foreach($users->items() as $user)
-        <div>{{ $user->name }}</div>
-    @endforeach
+// Usage
+class User extends Model
+{
+    #[Field(type: 'text')]
+    #[Encrypted]
+    public string $secret_data;
+}
+```
+
+### Custom CLI Command
+
+```php
+class ImportProductsCommand extends Command
+{
+    protected string $signature = 'products:import {file}';
+    protected string $description = 'Import products from CSV';
+
+    public function handle(): int
+    {
+        $file = $this->argument(0);
+        
+        $this->info("Importing from {$file}...");
+        
+        $rows = $this->readCSV($file);
+        $this->progressStart(count($rows));
+        
+        foreach ($rows as $row) {
+            Product::create($row);
+            $this->progressAdvance();
+        }
+        
+        $this->progressFinish();
+        $this->success('Import completed!');
+        
+        return 0;
+    }
+}
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+git clone https://github.com/neonextechnologies/neophp.git
+cd neophp
+composer install
+composer dump-autoload
+```
+
+### Running Tests
+
+```bash
+composer test
+```
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Neonex Core** - Foundation architecture inspiration
+- **Laravel** - Service provider pattern and CLI design
+- **WordPress** - Plugin hook system
+
+---
+
+## 📞 Support
+
+- **Documentation**: [FOUNDATION_GUIDE.md](FOUNDATION_GUIDE.md), [CLI_GUIDE.md](CLI_GUIDE.md)
+- **Issues**: [GitHub Issues](https://github.com/neonextechnologies/neophp/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/neonextechnologies/neophp/discussions)
+
+---
+
+<div align="center">
+
+**Built with ❤️ by Neonex Technologies**
+
+[![GitHub Stars](https://img.shields.io/github/stars/neonextechnologies/neophp?style=social)](https://github.com/neonextechnologies/neophp)
+[![Follow](https://img.shields.io/github/followers/neonextechnologies?style=social)](https://github.com/neonextechnologies)
+
 </div>
-
-{{ $users->links() }}
-
-// API Response
-return JsonResponse::success($users->toArray());
-// Returns: { data: [...], current_page: 1, last_page: 5, ... }
-```
-
-### Role-Based Access Control (RBAC)
-
-```php
-// Assign Role
-auth()->user()->assignRole('admin');
-auth()->user()->assignRole('editor');
-
-// Check Role
-if (auth()->user()->hasRole('admin')) {
-    // Admin only
-}
-
-// Check Permission
-if (auth()->user()->can('edit-posts')) {
-    // User has permission
-}
-
-// In Blade
 @can('edit-posts')
     <button>Edit</button>
 @endcan
