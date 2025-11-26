@@ -432,10 +432,11 @@ return new class extends Migration
 
 ### Core Documentation
 
-- **[Foundation Guide](FOUNDATION_GUIDE.md)** - Complete foundation architecture guide
-- **[CLI Guide](CLI_GUIDE.md)** - Command-line tools reference
+- **[Foundation Guide](docs/FOUNDATION_GUIDE.md)** - Complete foundation architecture guide
+- **[CLI Guide](docs/CLI_GUIDE.md)** - Command-line tools reference
 - **[Metadata Guide](examples/MetadataExample.php)** - Metadata-driven development
 - **[Plugin Guide](examples/PluginExample.php)** - Plugin architecture
+- **[All Documentation](docs/)** - Complete documentation index
 
 ### Key Concepts
 
