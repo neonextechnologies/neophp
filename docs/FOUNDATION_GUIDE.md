@@ -1,211 +1,260 @@
-# NeoPhp Foundation Framework
+# Foundation Framework Guide
 
-## 🎉 ตอนนี้ NeoPhp เป็น Foundation Framework แบบ Neonex Core แล้ว!
+This guide covers the core architecture patterns in NeoPhp.
 
-### ✅ ระบบที่เพิ่มเข้ามา (Neonex Core Style)
+## Contracts
 
-## 1. 📋 Contracts Layer (Pure Interfaces)
+NeoPhp uses interfaces to define core functionality. This lets you swap implementations without changing your code.
 
-ระบบ Contract/Interface แบบ pure abstraction เหมือน Neonex Core:
+### Available Contracts
 
 ```php
-// src/Contracts/
-- DatabaseInterface
-- CacheInterface  
-- QueueInterface
-- LoggerInterface
-- StorageInterface
-- MailerInterface
-- ValidatorInterface
-- ServiceProviderInterface
-- PluginInterface
-- MetadataInterface
+src/Contracts/
+├── DatabaseInterface.php
+├── CacheInterface.php
+├── QueueInterface.php
+├── LoggerInterface.php
+├── StorageInterface.php
+├── MailerInterface.php
+├── ValidatorInterface.php
+├── ServiceProviderInterface.php
+├── PluginInterface.php
+└── MetadataInterface.php
 ```
 
-**ใช้งาน:**
+### Example Usage
+
 ```php
 use NeoPhp\Contracts\DatabaseInterface;
 use NeoPhp\Contracts\CacheInterface;
 
-class UserService {
+class UserService
+{
     public function __construct(
         private DatabaseInterface $db,
         private CacheInterface $cache
     ) {}
+    
+    public function find(int $id): ?array {
+        return $this->cache->remember("user.$id", function() use ($id) {
+            return $this->db->query('SELECT * FROM users WHERE id = ?', [$id]);
+        });
+    }
 }
 ```
 
----
+## Service Providers
 
-## 2. 🏗️ Service Provider System
+Service providers are where you register and bootstrap your services.
 
-ระบบ Service Provider แบบ Laravel + Neonex Core:
+### Creating a Provider
 
-**สร้าง Service Provider:**
 ```php
 use NeoPhp\Foundation\ServiceProvider;
 
-class MyServiceProvider extends ServiceProvider
+class PaymentServiceProvider extends ServiceProvider
 {
-    protected array $provides = ['myservice'];
-    protected bool $defer = true; // Deferred loading
+    protected array $provides = ['payment'];
+    protected bool $defer = true;
     protected array $dependencies = [DatabaseServiceProvider::class];
 
     public function register(): void
     {
-        $this->singleton('myservice', function($app) {
-            return new MyService($app->make('db'));
+        $this->singleton('payment', function($app) {
+            return new StripePayment($app->make('db'));
         });
     }
 
     public function boot(): void
     {
-        // Bootstrap logic after all providers registered
+        // Bootstrap after all providers are registered
     }
 }
 ```
 
-**Provider Manager:**
+### Provider Manager
+
 ```php
 $providerManager = new ProviderManager($container);
 
-// Register providers
+// Register providers manually
 $providerManager->registerProviders([
     DatabaseServiceProvider::class,
     CacheServiceProvider::class,
-    QueueServiceProvider::class,
-    MyServiceProvider::class
+    PaymentServiceProvider::class
 ]);
 
-// Boot all providers
-$providerManager->bootProviders();
-
-// Auto-discover providers
+// Or auto-discover from directory
 $providers = $providerManager->discover('app/Providers');
+
+// Boot all registered providers
+$providerManager->bootProviders();
 ```
 
----
+### Provider Features
 
-## 3. 🔌 Plugin Architecture
+- **Deferred Loading** - Set `$defer = true` to load only when needed
+- **Dependencies** - Declare provider dependencies in `$dependencies`
+- **Service Binding** - Use `singleton()`, `bind()`, or `instance()` methods
 
-ระบบ Plugin แบบ WordPress + Neonex Core:
+## Plugins
 
-**สร้าง Plugin:**
+Plugins let you extend functionality without modifying core code.
+
+### Creating a Plugin
+
 ```php
-// plugins/MyPlugin/Plugin.php
-namespace Plugins\MyPlugin;
+namespace Plugins\Blog;
 
 use NeoPhp\Plugin\Plugin;
 
-class MyPlugin extends Plugin
+class BlogPlugin extends Plugin
 {
-    protected string $name = 'My Awesome Plugin';
+    protected string $name = 'Blog';
     protected string $version = '1.0.0';
-    protected array $dependencies = ['CorePlugin'];
+    protected array $dependencies = [];
 
     public function install(): void
     {
-        // Run installation logic
-        // Create tables, default settings, etc.
+        Schema::create('posts', function($table) {
+            $table->id();
+            $table->string('title');
+            $table->text('content');
+            $table->timestamps();
+        });
     }
 
     public function uninstall(): void
     {
-        // Cleanup
+        Schema::dropIfExists('posts');
     }
 
     public function boot(): void
     {
         // Register hooks
-        $this->addHook('user.created', function($user) {
-            // Do something when user created
-        });
-
-        // Register routes, services, etc.
+        HookManager::addAction('app.boot', [$this, 'registerRoutes']);
+        
+        // Register services
+        $this->app->singleton('blog', fn() => new BlogService());
+    }
+    
+    public function registerRoutes(): void
+    {
+        Route::get('/blog', [BlogController::class, 'index']);
     }
 }
 ```
 
-**Plugin Manager:**
+### Plugin Manager
+
 ```php
 $pluginManager = new PluginManager($container);
 
-// Discover plugins
+// Discover available plugins
 $plugins = $pluginManager->discover();
 
-// Install plugin
-$pluginManager->install('My Awesome Plugin');
-
-// Activate plugin
-$pluginManager->activate('My Awesome Plugin');
+// Install and activate
+$pluginManager->install('Blog');
+$pluginManager->activate('Blog');
 
 // Boot all active plugins
 $pluginManager->bootPlugins();
 ```
 
----
+## Hooks
 
-## 4. 🎣 Hook System
+The hook system lets plugins interact with your application.
 
-ระบบ Hook แบบ WordPress action/filter:
-
-**Actions:**
+### Actions
 ```php
 use NeoPhp\Plugin\HookManager;
 
-// Register action hook
+// Register an action
 HookManager::addAction('user.created', function($user) {
     logger()->info("User {$user['name']} created");
 }, 10, 1);
 
-// Execute action
+// Trigger the action
 HookManager::doAction('user.created', $user);
 ```
 
-**Filters:**
+### Filters
+
 ```php
-// Register filter hook
+// Register a filter
 HookManager::addFilter('user.name', function($name) {
     return strtoupper($name);
 }, 10, 1);
 
-// Apply filter
+// Apply the filter
 $userName = HookManager::applyFilters('user.name', $user->name);
 ```
 
-**Plugin Hooks:**
+### Using Hooks in Plugins
+
 ```php
-class MyPlugin extends Plugin
+class BlogPlugin extends Plugin
 {
     public function boot(): void
     {
-        // Action: Do something when event happens
         HookManager::addAction('app.booted', [$this, 'onAppBooted']);
-        
-        // Filter: Modify data
         HookManager::addFilter('user.data', [$this, 'filterUserData']);
     }
 
     public function onAppBooted(): void
     {
-        // Plugin logic
+        // Do something when app is booted
     }
 
     public function filterUserData(array $data): array
     {
-        $data['plugin_field'] = 'value';
+        $data['from_blog_plugin'] = true;
         return $data;
     }
 }
 ```
 
----
+## Metadata System
 
-## 5. 📊 Metadata-Driven Architecture
+Define your models using PHP 8 attributes. This metadata can be used to generate forms, validation rules, and database schemas.
 
-ระบบ Metadata แบบ Neonex Core - **นี่คือหัวใจสำคัญ!**
+### Basic Example
 
-**Define Model with Metadata:**
+```php
+use NeoPhp\Metadata\{Table, Field, HasMany, BelongsTo};
+
+#[Table('products')]
+class Product
+{
+    #[Field('id', type: 'integer', primary: true, autoIncrement: true)]
+    public int $id;
+
+    #[Field('name', 
+        type: 'string', 
+        length: 255,
+        nullable: false,
+        validation: ['required', 'max:255'],
+        label: 'Product Name'
+    )]
+    public string $name;
+
+    #[Field('price',
+        type: 'decimal',
+        precision: 10,
+        scale: 2,
+        validation: ['required', 'numeric', 'min:0']
+    )]
+    public float $price;
+
+    #[BelongsTo(model: Category::class, foreignKey: 'category_id')]
+    public function category() {}
+
+    #[HasMany(model: Review::class, foreignKey: 'product_id')]
+    public function reviews() {}
+}
+```
+
+### Reading Metadata
 ```php
 use NeoPhp\Metadata\{Table, Field, HasMany, BelongsTo};
 
@@ -276,130 +325,98 @@ class Product
 }
 ```
 
-**Metadata Repository:**
 ```php
 $metadataRepo = new MetadataRepository($cache);
 
-// Get model metadata
+// Get all metadata for a model
 $metadata = $metadataRepo->getModelMetadata(Product::class);
 
-/*
-Returns:
-[
-    'table' => 'products',
-    'primaryKey' => 'id',
-    'fields' => [
-        'name' => [
-            'type' => 'string',
-            'validation' => ['required', 'max:255'],
-            'label' => 'Product Name',
-            'searchable' => true,
-            ...
-        ],
-        ...
-    ],
-    'relationships' => [
-        'category' => ['type' => 'BelongsTo', 'model' => Category::class],
-        'reviews' => ['type' => 'HasMany', 'model' => Review::class]
-    ]
-]
-*/
+// Returns structure like:
+// [
+//     'table' => 'products',
+//     'primaryKey' => 'id',
+//     'fields' => [...],
+//     'relationships' => [...]
+// ]
 
-// Get validation rules automatically
+// Extract validation rules automatically
 $rules = $metadataRepo->getValidationRules(Product::class);
-/*
-Returns:
-[
-    'name' => 'required|max:255',
-    'price' => 'required|numeric|min:0',
-    'image' => 'file|mimes:jpg,png,webp|max:2048',
-    ...
-]
-*/
+
+// Returns:
+// [
+//     'name' => 'required|max:255',
+//     'price' => 'required|numeric|min:0',
+//     ...
+// ]
 ```
 
----
+### Available Attributes
 
-## 6. 📝 Dynamic Form Generator
+- `#[Table('table_name')]` - Define table name
+- `#[Field(...)]` - Define field properties
+- `#[Validation(['rule1', 'rule2'])]` - Validation rules
+- `#[HasMany(...)]` - One-to-many relationship
+- `#[BelongsTo(...)]` - Many-to-one relationship
+- `#[BelongsToMany(...)]` - Many-to-many relationship
+- `#[MorphTo(...)]` - Polymorphic relationship
 
-สร้าง Forms อัตโนมัติจาก Metadata:
+## Form Builder
+
+Generate HTML forms from metadata automatically.
 
 ```php
 $formBuilder = new FormBuilder($metadataRepo);
 
-// Generate form HTML from model
+// Generate form for creating/editing
 $formHtml = $formBuilder->make(Product::class, [
     'action' => '/products',
     'method' => 'POST',
-    'values' => $product->toArray(), // For edit form
-    'errors' => $validator->errors() // Show validation errors
+    'values' => $product ?? [],
+    'errors' => $errors ?? []
 ]);
 
 echo $formHtml;
-/*
-Generates:
-<form method="POST" action="/products" enctype="multipart/form-data">
-    <div class="form-group">
-        <label for="name">Product Name<span class="required">*</span></label>
-        <input type="text" name="name" id="name" class="form-control" required>
-    </div>
-    
-    <div class="form-group">
-        <label for="price">Price (THB)<span class="required">*</span></label>
-        <input type="number" name="price" id="price" class="form-control" min="0" required>
-    </div>
-    
-    <div class="form-group">
-        <label for="description">Description</label>
-        <textarea name="description" id="description" class="form-control" rows="4"></textarea>
-    </div>
-    
-    <div class="form-group">
-        <label for="image">Image</label>
-        <input type="file" name="image" id="image" accept=".jpg,.png,.webp">
-    </div>
-    
-    <div class="form-group">
-        <label for="status">Status<span class="required">*</span></label>
-        <select name="status" id="status" class="form-control">
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-        </select>
-    </div>
-    
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </div>
-</form>
-*/
 ```
 
-**ใน Blade:**
+The form builder:
+- Generates appropriate input types based on field metadata
+- Adds validation attributes (required, min, max, etc.)
+- Pre-fills values for edit forms
+- Displays validation errors
+- Handles file uploads
+
+### Custom Form Fields
+
 ```php
-@formFor('Product', ['action' => '/products', 'method' => 'POST'])
-// Auto-generated form
-@endformFor
+#[Field('status',
+    type: 'enum',
+    enum: ['draft' => 'Draft', 'published' => 'Published'],
+    inputType: 'radio'
+)]
+public string $status;
 ```
 
----
+This generates radio buttons instead of a select dropdown.
 
-## 7. ✅ Metadata-Driven Validation
+## Validation
 
-Validation อัตโนมัติจาก Metadata:
+Extract validation rules from metadata:
 
 ```php
-// Extract rules from metadata
-$metadata = $metadataRepo->getModelMetadata(Product::class);
 $rules = $metadataRepo->getValidationRules(Product::class);
 
-// Validate automatically
 $validator = validator($_POST, $rules);
 
 if ($validator->fails()) {
     return back()->withErrors($validator->errors());
 }
 
-// Or use in controller
+$validated = $validator->validated();
+```
+
+## Complete Example
+
+Here's how everything works together:// Or use in controller
 public function store()
 {
     $rules = metadata(Product::class)->getValidationRules();
@@ -413,9 +430,9 @@ public function store()
 
 ---
 
-## 🎯 เปรียบเทียบ: ก่อนและหลัง
+## 🎯 Comparison: Before and After
 
-### ❌ ก่อน (Hard-coded):
+### ❌ Before (Hard-coded):
 
 ```php
 // ต้องเขียนเอง
@@ -430,50 +447,59 @@ class ProductController
     {
         // Hard-coded validation
         $validator = validator($_POST, [
-            'name' => 'required|max:255',
-            'price' => 'required|numeric|min:0',
-            'image' => 'file|mimes:jpg,png|max:2048',
-            ...
-        ]);
+```php
+// Define your model with metadata
+#[Table('products')]
+class Product
+{
+    #[Field('name', type: 'string', validation: ['required', 'max:255'])]
+    public string $name;
 
-        if ($validator->fails()) {
-            return back()->withErrors($validator);
-        }
+    #[Field('price', type: 'decimal', validation: ['required', 'numeric', 'min:0'])]
+    public float $price;
 
-        Product::create($validator->validated());
+    #[BelongsTo(model: Category::class, foreignKey: 'category_id')]
+    public function category() {}
+}
+
+// Create a service provider
+class ProductServiceProvider extends ServiceProvider
+{
+    public function register(): void {
+        $this->singleton('products', fn() => new ProductRepository(
+            $this->app->make('db')
+        ));
     }
 }
 
-// ต้องเขียน form เอง
-<!-- products/create.blade.php -->
-<form method="POST" action="/products">
-    <input type="text" name="name" required>
-    <input type="number" name="price" min="0" required>
-    <input type="file" name="image" accept=".jpg,.png">
-    ...
-    <button type="submit">Submit</button>
-</form>
-```
+// Create a plugin
+class ShopPlugin extends Plugin
+{
+    protected string $name = 'Shop';
+    
+    public function install(): void {
+        Schema::create('products', function($table) {
+            $table->id();
+            $table->string('name');
+            $table->decimal('price', 10, 2);
+            $table->timestamps();
+        });
+    }
+    
+    public function boot(): void {
+        Route::get('/shop', [ShopController::class, 'index']);
+        
+        HookManager::addAction('product.created', function($product) {
+            logger()->info("Product created: {$product['name']}");
+        });
+    }
+}
 
-### ✅ หลัง (Metadata-driven):
-
-```php
-// Auto-everything!
+// Controller with auto-validation
 class ProductController
 {
-    public function create()
-    {
-        $form = form()->make(Product::class, [
-            'action' => '/products',
-            'method' => 'POST'
-        ]);
-        
-        return view('products.create', compact('form'));
-    }
-
     public function store()
     {
-        // Auto validation from metadata
         $rules = metadata(Product::class)->getValidationRules();
         $validator = validator(request()->all(), $rules);
 
@@ -482,108 +508,69 @@ class ProductController
             return redirect('/products');
         }
 
-        // Auto form with errors
-        $form = form()->make(Product::class, [
-            'action' => '/products',
-            'method' => 'POST',
-            'values' => request()->all(),
-            'errors' => $validator->errors()
-        ]);
-
-        return view('products.create', compact('form'));
+        return back()->withErrors($validator->errors());
     }
 }
 
-// Auto-generated form
-<!-- products/create.blade.php -->
-{!! $form !!}
-```
-
----
-
-## 🚀 การใช้งานแบบ Neonex Core
-
-### 1. Bootstrap Application
-
-```php
-// bootstrap/app.php
-$container = new Container();
-
-// Register providers
-$providerManager = new ProviderManager($container);
-$providerManager->registerProviders([
-    DatabaseServiceProvider::class,
-    CacheServiceProvider::class,
-    QueueServiceProvider::class,
-    // ... other providers
+// Generate form from metadata
+$form = form()->make(Product::class, [
+    'action' => '/products',
+    'method' => 'POST'
 ]);
-
-// Boot providers
-$providerManager->bootProviders();
-
-// Initialize plugin system
-$pluginManager = new PluginManager($container);
-$plugins = $pluginManager->discover();
-
-// Boot active plugins
-$pluginManager->bootPlugins();
-
-// Initialize metadata repository
-$metadataRepo = new MetadataRepository($container->make('cache'));
-$container->instance(MetadataRepository::class, $metadataRepo);
-
-return $container;
 ```
 
-### 2. สร้าง Plugin
+## Best Practices
+
+### Contract Usage
+
+Always type-hint interfaces, not concrete classes:
 
 ```php
-// plugins/BlogPlugin/Plugin.php
-namespace Plugins\BlogPlugin;
+// Good
+public function __construct(private DatabaseInterface $db) {}
 
-use NeoPhp\Plugin\Plugin;
-use NeoPhp\Plugin\HookManager;
+// Bad
+public function __construct(private PDODatabase $db) {}
+```
 
-class BlogPlugin extends Plugin
+### Service Provider Organization
+
+Group related services in one provider:
+
+```php
+class PaymentServiceProvider extends ServiceProvider
 {
-    protected string $name = 'Blog Plugin';
-    protected string $version = '1.0.0';
-
-    public function install(): void
-    {
-        // Create blog tables
-        $db = app('db');
-        $db->execute("
-            CREATE TABLE blog_posts (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                title VARCHAR(255) NOT NULL,
-                content TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ");
-    }
-
-    public function boot(): void
-    {
-        // Register routes
-        Route::get('/blog', [BlogController::class, 'index']);
-        Route::get('/blog/{id}', [BlogController::class, 'show']);
-
-        // Register hooks
-        HookManager::addAction('post.created', function($post) {
-            logger()->info("Blog post created: {$post['title']}");
-        });
-
-        // Register service provider
-        app()->make(ProviderManager::class)->register(BlogServiceProvider::class);
+    public function register(): void {
+        $this->app->singleton('stripe', fn() => new StripePayment());
+        $this->app->singleton('paypal', fn() => new PayPalPayment());
+        $this->app->singleton('payment', fn() => new PaymentGateway(
+            $this->app->make('stripe'),
+            $this->app->make('paypal')
+        ));
     }
 }
 ```
 
-### 3. Metadata-Driven CRUD
+### Plugin Dependencies
+
+Declare dependencies explicitly:
 
 ```php
-// ตัวอย่างการสร้าง CRUD อัตโนมัติ
+class AdvancedBlogPlugin extends Plugin
+{
+    protected string $name = 'Advanced Blog';
+    protected array $dependencies = ['Blog', 'Media'];
+    
+    // Plugin will only load after Blog and Media plugins
+}
+```
+
+### Metadata Best Practices
+
+Keep validation rules in metadata for reusability:
+
+```php
+// Example: Auto-generate CRUD
 class GenericCRUDController
 {
     protected MetadataRepository $metadata;
@@ -610,62 +597,28 @@ class GenericCRUDController
     {
         $form = $this->formBuilder->make($model, [
             'action' => "/admin/{$model}",
-            'method' => 'POST'
-        ]);
-        
-        return view('admin.generic.create', compact('form'));
-    }
-
-    public function store(string $model)
-    {
-        $rules = $this->metadata->getValidationRules($model);
-        $validator = validator(request()->all(), $rules);
-
-        if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
-        }
-
-        $model::create($validator->validated());
-        
-        return redirect("/admin/{$model}")->with('success', 'Created successfully');
-    }
-}
+```php
+#[Field('name', 
+    type: 'string',
+    validation: ['required', 'max:255'], // Rules here
+    label: 'Product Name'
+)]
+public string $name;
 ```
 
----
+This keeps your validation logic with your model definition, making it easier to maintain.
 
-## 📚 สรุป: NeoPhp ตอนนี้
+## Summary
 
-### ✅ เหมือน Neonex Core:
-- ✅ Pure Contract/Interface layer
-- ✅ Service Provider system
-- ✅ Plugin architecture  
-- ✅ Hook system (action/filter)
-- ✅ Metadata-driven architecture
-- ✅ Deferred loading
-- ✅ Dependency injection
-- ✅ Auto-discovery
+NeoPhp provides:
 
-### 🎯 Features พิเศษ:
-- ✅ Metadata attributes (#[Table], #[Field])
-- ✅ Dynamic form generation
-- ✅ Auto validation from metadata
-- ✅ Plugin install/uninstall system
-- ✅ Hook manager
-- ✅ Provider manager with dependencies
+- **Contracts** - Interface-based architecture
+- **Service Providers** - Modular service registration
+- **Plugins** - Extensible architecture with hooks
+- **Metadata** - PHP 8 attributes for declarative models
+- **Form Builder** - Auto-generate forms from metadata
+- **CLI Tools** - Code generation and migrations
 
-### 🚀 Next Steps:
+This foundation lets you build applications without being locked into specific implementations. You can swap any component by implementing the appropriate contract.
 
-เมื่อต้องการสร้าง **Admin Panel Generator** ต่อ:
-
-1. **CLI Framework** - สำหรับ `php artisan make:*` commands
-2. **Code Generator** - Generate controllers, models, views
-3. **CRUD Generator** - Auto-generate CRUD from metadata
-4. **Migration System** - Database versioning
-5. **Seeder System** - Fake data generation
-
----
-
-**ตอนนี้ NeoPhp พร้อมเป็น Foundation Framework แบบ Neonex Core แล้วครับ!** 🎉
-
-แค่ยังขาด CLI tools สำหรับ code generation ซึ่งเป็น phase ถัดไปครับ
+For CLI tools and code generation, see the [CLI Guide](CLI_GUIDE.md).
