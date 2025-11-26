@@ -1,0 +1,74 @@
+<?php namespace {{namespace}};
+
+use NeoPhp\Http\Controller;
+use NeoPhp\Http\Request;
+use NeoPhp\Http\Response;
+
+class {{class}} extends Controller
+{
+    /**
+     * Display a listing of the resource
+     */
+    public function index(Request $request): Response
+    {
+        return $this->json([
+            'message' => '{{class}} index',
+            'data' => []
+        ]);
+    }
+
+    /**
+     * Display the specified resource
+     */
+    public function show(Request $request, int $id): Response
+    {
+        return $this->json([
+            'message' => '{{class}} show',
+            'id' => $id
+        ]);
+    }
+
+    /**
+     * Store a newly created resource
+     */
+    public function store(Request $request): Response
+    {
+        $data = $request->all();
+        
+        // TODO: Validate and store data
+        
+        return $this->json([
+            'message' => '{{class}} created',
+            'data' => $data
+        ], 201);
+    }
+
+    /**
+     * Update the specified resource
+     */
+    public function update(Request $request, int $id): Response
+    {
+        $data = $request->all();
+        
+        // TODO: Validate and update data
+        
+        return $this->json([
+            'message' => '{{class}} updated',
+            'id' => $id,
+            'data' => $data
+        ]);
+    }
+
+    /**
+     * Remove the specified resource
+     */
+    public function destroy(Request $request, int $id): Response
+    {
+        // TODO: Delete data
+        
+        return $this->json([
+            'message' => '{{class}} deleted',
+            'id' => $id
+        ]);
+    }
+}

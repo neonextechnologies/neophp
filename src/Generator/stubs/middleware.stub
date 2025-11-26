@@ -1,0 +1,24 @@
+<?php namespace {{namespace}};
+
+use NeoPhp\Http\Request;
+use NeoPhp\Http\Response;
+use NeoPhp\Http\Middleware;
+
+class {{class}} implements Middleware
+{
+    /**
+     * Handle an incoming request
+     */
+    public function handle(Request $request, callable $next): Response
+    {
+        // Process request before controller
+        // Example: Check authentication, validate headers, etc.
+        
+        $response = $next($request);
+        
+        // Process response after controller
+        // Example: Add headers, modify content, etc.
+        
+        return $response;
+    }
+}

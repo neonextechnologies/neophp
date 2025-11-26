@@ -1,0 +1,28 @@
+<?php
+
+use NeoPhp\Database\Migrations\Migration;
+use NeoPhp\Database\Schema\Schema;
+use NeoPhp\Database\Schema\Blueprint;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations
+     */
+    public function up(): void
+    {
+        Schema::create('{{table}}', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('{{table}}');
+    }
+};

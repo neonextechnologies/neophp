@@ -47,14 +47,21 @@
             "NeoPhp\\Mail\\": "src/Mail/",
             "NeoPhp\\Pagination\\": "src/Pagination/",
             "NeoPhp\\Schedule\\": "src/Schedule/",
+            "NeoPhp\\Contracts\\": "src/Contracts/",
+            "NeoPhp\\Foundation\\": "src/Foundation/",
+            "NeoPhp\\Plugin\\": "src/Plugin/",
+            "NeoPhp\\Metadata\\": "src/Metadata/",
+            "NeoPhp\\Forms\\": "src/Forms/",
+            "NeoPhp\\Generator\\": "src/Generator/",
             "App\\": "app/"
         },
         "files": [
-            "src/helpers.php"
+            "src/helpers.php",
+            "src/foundation_helpers.php"
         ]
     },
     "bin": [
-        "neophp"
+        "neo"
     ],
     "autoload-dev": {
         "psr-4": {

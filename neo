@@ -1,0 +1,83 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * NeoPhp CLI Application
+ * 
+ * Usage:
+ *   php neo <command> [options] [arguments]
+ * 
+ * Examples:
+ *   php neo list
+ *   php neo make:controller UserController
+ *   php neo make:model User
+ *   php neo migrate
+ *   php neo migrate:rollback
+ */
+
+define('NEO_START', microtime(true));
+
+// Load Composer autoloader
+require __DIR__ . '/vendor/autoload.php';
+
+// Load environment
+if (file_exists(__DIR__ . '/.env')) {
+    $dotenv = parse_ini_file(__DIR__ . '/.env');
+    foreach ($dotenv as $key => $value) {
+        $_ENV[$key] = $value;
+        putenv("$key=$value");
+    }
+}
+
+// Bootstrap application
+$container = require __DIR__ . '/bootstrap/app.php';
+
+// Create console application
+$console = new NeoPhp\Console\Application($container);
+$console->setName('NeoPhp CLI')
+    ->setVersion('2.0.0');
+
+// Register built-in commands
+$console->registerCommands([
+    // Make commands
+    'make:controller' => NeoPhp\Console\Commands\MakeControllerCommand::class,
+    'make:model' => NeoPhp\Console\Commands\MakeModelCommand::class,
+    'make:migration' => NeoPhp\Console\Commands\MakeMigrationCommand::class,
+    'make:middleware' => NeoPhp\Console\Commands\MakeMiddlewareCommand::class,
+    'make:provider' => NeoPhp\Console\Commands\MakeProviderCommand::class,
+    'make:plugin' => NeoPhp\Console\Commands\MakePluginCommand::class,
+    'make:command' => NeoPhp\Console\Commands\MakeCommandCommand::class,
+    
+    // Migration commands
+    'migrate' => NeoPhp\Console\Commands\MigrateCommand::class,
+    'migrate:rollback' => NeoPhp\Console\Commands\MigrateRollbackCommand::class,
+    'migrate:reset' => NeoPhp\Console\Commands\MigrateResetCommand::class,
+    'migrate:refresh' => NeoPhp\Console\Commands\MigrateRefreshCommand::class,
+    'migrate:status' => NeoPhp\Console\Commands\MigrateStatusCommand::class,
+    'migrate:fresh' => NeoPhp\Console\Commands\MigrateFreshCommand::class,
+    
+    // Database commands
+    'db:seed' => NeoPhp\Console\Commands\SeedCommand::class,
+    'db:wipe' => NeoPhp\Console\Commands\WipeCommand::class,
+    
+    // Cache commands
+    'cache:clear' => NeoPhp\Console\Commands\CacheClearCommand::class,
+    
+    // Plugin commands
+    'plugin:install' => NeoPhp\Console\Commands\PluginInstallCommand::class,
+    'plugin:uninstall' => NeoPhp\Console\Commands\PluginUninstallCommand::class,
+    'plugin:list' => NeoPhp\Console\Commands\PluginListCommand::class,
+    
+    // Development server
+    'serve' => NeoPhp\Console\Commands\ServeCommand::class,
+]);
+
+// Auto-discover custom commands
+if (is_dir(__DIR__ . '/app/Console/Commands')) {
+    $console->discover(__DIR__ . '/app/Console/Commands');
+}
+
+// Run console application
+$exitCode = $console->run($argv);
+
+exit($exitCode);

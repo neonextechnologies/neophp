@@ -1,0 +1,30 @@
+<?php namespace {{namespace}};
+
+use NeoPhp\Console\Command;
+
+class {{class}} extends Command
+{
+    /**
+     * Command signature
+     */
+    protected string $signature = '{{command}}';
+
+    /**
+     * Command description
+     */
+    protected string $description = '{{description}}';
+
+    /**
+     * Execute the command
+     */
+    public function handle(): int
+    {
+        $this->info('Executing {{command}} command...');
+        
+        // TODO: Implement command logic
+        
+        $this->success('Command completed successfully!');
+        
+        return 0;
+    }
+}

@@ -1,0 +1,97 @@
+<?php namespace {{namespace}};
+
+use NeoPhp\Plugin\Plugin;
+use NeoPhp\Plugin\HookManager;
+
+class {{class}} extends Plugin
+{
+    /**
+     * Plugin name
+     */
+    protected string $name = '{{plugin}}';
+
+    /**
+     * Plugin version
+     */
+    protected string $version = '1.0.0';
+
+    /**
+     * Plugin description
+     */
+    protected string $description = '{{description}}';
+
+    /**
+     * Plugin author
+     */
+    protected string $author = '{{author}}';
+
+    /**
+     * Plugin dependencies
+     */
+    protected array $dependencies = [];
+
+    /**
+     * Install the plugin
+     */
+    public function install(): void
+    {
+        // Run installation logic
+        // Example: Create tables, add config, etc.
+    }
+
+    /**
+     * Uninstall the plugin
+     */
+    public function uninstall(): void
+    {
+        // Run uninstallation logic
+        // Example: Drop tables, remove config, etc.
+    }
+
+    /**
+     * Boot the plugin
+     */
+    public function boot(): void
+    {
+        // Register hooks, routes, services, etc.
+        $this->registerHooks();
+        $this->registerRoutes();
+    }
+
+    /**
+     * Register plugin hooks
+     */
+    protected function registerHooks(): void
+    {
+        // Add action hooks
+        HookManager::addAction('app.boot', [$this, 'onAppBoot']);
+        
+        // Add filter hooks
+        HookManager::addFilter('response.headers', [$this, 'modifyHeaders']);
+    }
+
+    /**
+     * Register plugin routes
+     */
+    protected function registerRoutes(): void
+    {
+        // Register routes for the plugin
+    }
+
+    /**
+     * Handle app boot event
+     */
+    public function onAppBoot(): void
+    {
+        // Handle application boot
+    }
+
+    /**
+     * Modify response headers
+     */
+    public function modifyHeaders(array $headers): array
+    {
+        // Modify and return headers
+        return $headers;
+    }
+}

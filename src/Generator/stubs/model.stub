@@ -1,0 +1,68 @@
+<?php namespace {{namespace}};
+
+use NeoPhp\Database\Model;
+use NeoPhp\Metadata\Table;
+use NeoPhp\Metadata\Field;
+
+#[Table(name: '{{table}}')]
+class {{class}} extends Model
+{
+    #[Field(
+        type: 'int',
+        primaryKey: true,
+        autoIncrement: true
+    )]
+    public int $id;
+
+    #[Field(
+        type: 'varchar',
+        length: 255,
+        nullable: false,
+        required: true
+    )]
+    public string $name;
+
+    #[Field(
+        type: 'timestamp',
+        nullable: true,
+        default: 'CURRENT_TIMESTAMP'
+    )]
+    public ?string $created_at;
+
+    #[Field(
+        type: 'timestamp',
+        nullable: true,
+        onUpdate: 'CURRENT_TIMESTAMP'
+    )]
+    public ?string $updated_at;
+
+    /**
+     * The table associated with the model
+     */
+    protected string $table = '{{table}}';
+
+    /**
+     * The primary key for the model
+     */
+    protected string $primaryKey = 'id';
+
+    /**
+     * Fillable fields
+     */
+    protected array $fillable = [
+        'name',
+    ];
+
+    /**
+     * Hidden fields (not included in JSON)
+     */
+    protected array $hidden = [];
+
+    /**
+     * Casts for attributes
+     */
+    protected array $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+}
