@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Web Routes
+ * 
+ * Register your application routes here.
+ */
+
 /** @var \NeoPhp\Routing\Router $router */
 $router = app('router');
 
@@ -8,35 +14,6 @@ $router->get('/', function ($request) {
     return response(view('home'));
 })->name('home');
 
-// API example
-$router->get('/api/hello', function ($request) {
-    return json([
-        'message' => 'Hello from NeoPhp!',
-        'version' => '1.0.0',
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
-})->name('api.hello');
-
-// Route with parameter
-$router->get('/user/{id}', function ($request, $id) {
-    return json([
-        'user_id' => $id,
-        'name' => 'User ' . $id
-    ]);
-})->name('user.show');
-
-// Group example
-$router->group(['prefix' => 'api/v1'], function ($router) {
-    $router->get('/status', function ($request) {
-        return json([
-            'status' => 'ok',
-            'service' => 'NeoPhp API'
-        ]);
-    });
-
-    $router->post('/data', function ($request) {
-        return json([
-            'received' => $request->all()
-        ]);
-    });
-});
+// Example: Define your routes here
+// $router->get('/about', [HomeController::class, 'about']);
+// $router->resource('/products', ProductController::class);
