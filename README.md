@@ -1,45 +1,62 @@
-# NeoPhp Framework
+# 🚀 NeoPhp - Foundation Framework
 
-A lightweight foundation framework for building PHP applications with modern architecture patterns.
+<div align="center">
 
-## What is NeoPhp?
+![PHP Version](https://img.shields.io/badge/PHP-8.0%20to%208.4-777BB4?style=flat-square&logo=php)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
+![Architecture](https://img.shields.io/badge/Architecture-Foundation-purple?style=flat-square)
+![Type](https://img.shields.io/badge/Type-Metadata%20Driven-orange?style=flat-square)
 
-NeoPhp is a foundation framework that provides core building blocks rather than a complete solution. Think of it as the structural foundation you build your house on - it gives you:
+**A foundation framework for building full-featured PHP applications**  
+*Contract-first architecture with metadata-driven development*
 
-- Clean contract-based architecture
-- Service provider pattern for modular code
-- Plugin system with hooks (similar to WordPress)
-- Metadata-driven development using PHP 8 attributes
-- CLI tools for code generation
-- Database migration system
+[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [CLI Tools](#-cli-tools)
 
-Unlike monolithic frameworks, NeoPhp lets you pick what you need and build on top of it.
+</div>
 
-## Requirements
+---
 
-- PHP 8.0 or higher
-- Composer
+## 📖 What is NeoPhp?
 
-## Quick Start
+**NeoPhp** is a **Foundation Framework** - not a full-stack framework like Laravel, but a solid architectural foundation for building one. It provides:
 
-```bash
-git clone https://github.com/neonextechnologies/neophp.git
-cd neophp
-composer install
-cp .env.example .env
-php neo migrate
-php neo serve
+- 🏗️ **Foundation Layer** - Contract-first architecture with pure interfaces
+- 🔌 **Plugin System** - Extensible with WordPress-style hooks
+- 🎯 **Service Providers** - Deferred loading and dependency management
+- 📝 **Metadata-Driven** - PHP 8 Attributes for declarative development
+- 🛠️ **CLI Tools** - Code generation and migration system (`php neo`)
+- ⚡ **Performance** - Lightweight and modular design
+
+### Why Foundation Framework?
+
+```
+Traditional Full Framework (Laravel, Symfony):
+└─ Everything built-in (Database, Auth, Queue, Cache, etc.)
+
+NeoPhp Foundation Framework:
+├─ Pure Contracts (Interfaces only)
+├─ Service Providers (Modular services)
+├─ Plugin Architecture (Extensible)
+├─ Metadata System (Declarative)
+└─ CLI Tools (Code generation)
+    └─ Build Your Application On Top
 ```
 
-Visit http://localhost:8000
+**Perfect for:**
+- ✅ Building custom frameworks for specific needs
+- ✅ Creating modular applications with plugins
+- ✅ Metadata-driven CRUD generators
+- ✅ Rapid prototyping with CLI tools
 
-## Core Concepts
+---
 
-### Contracts First
+## ✨ Features
 
-Everything starts with interfaces. This means you can swap implementations without changing your code:
+### 🏗️ Foundation Architecture
 
+**Contract-First Design:**
 ```php
+// Pure interfaces - no implementation lock-in
 interface DatabaseInterface {
     public function query(string $sql, array $params = []): array;
 }
@@ -48,56 +65,116 @@ class UserRepository {
     public function __construct(private DatabaseInterface $db) {}
 }
 ```
-- Activate/Deactivate state
-- Dependency management
-- Service provider integration
+
+**10 Core Contracts:**
+- DatabaseInterface
+- CacheInterface
+- QueueInterface
+- LoggerInterface
+- StorageInterface
+- MailerInterface
+- ValidatorInterface
+- ServiceProviderInterface
+- PluginInterface
+- MetadataInterface
+
+### 🎯 Service Provider System
+
+**Laravel-style providers with auto-discovery:**
+```php
+class PaymentServiceProvider extends ServiceProvider
+{
+    public function register(): void {
+        $this->app->singleton('payment', fn() => new StripePayment(
+            config('payment.stripe_key')
+        ));
+    }
+    
+    public function boot(): void {
+        // Bootstrap services
+    }
+}
+```
+
+**Features:**
+- Auto-discovery from `app/Providers/`
+- Deferred loading for performance
+- Dependency resolution
+
+### 🔌 Plugin Architecture
+
+**WordPress-Style Hooks:**
+```php
+// Add action hook
+HookManager::addAction('user.created', function($user) {
+    Mail::send($user->email, 'Welcome!');
+});
+
+// Add filter hook
+HookManager::addFilter('response.headers', function($headers) {
+    $headers['X-Powered-By'] = 'NeoPhp';
+    return $headers;
+});
+```
+
+**Plugin System:**
+```php
+class BlogPlugin extends Plugin
+{
+    protected string $name = 'blog';
+    protected string $version = '1.0.0';
+    
+    public function install(): void {
+        // Create tables, copy files
+    }
+    
+    public function boot(): void {
+        // Register routes, hooks, services
+    }
+    
+    public function uninstall(): void {
+        // Cleanup
+    }
+}
+```
 
 ### 📝 Metadata-Driven Development
 
 **PHP 8 Attributes for Models:**
 ```php
-#[Table(name: 'products')]
-class Product extends Model
+#[Table('products')]
+class Product
 {
-    #[Field(
-        type: 'varchar',
-        length: 255,
-        required: true,
-        min: 3,
-        max: 100,
-        label: 'Product Name',
-        inputType: 'text'
-    )]
+    #[Field(type: 'varchar', length: 255, required: true, label: 'Product Name')]
+    #[Validation(['required', 'min:3', 'max:100'])]
     public string $name;
 
-    #[Field(
-        type: 'decimal',
-        precision: 10,
-        scale: 2,
-        required: true,
-        min: 0,
-        label: 'Price',
-        inputType: 'number'
-    )]
+    #[Field(type: 'decimal', precision: 10, scale: 2, required: true)]
+    #[Validation(['required', 'numeric', 'min:0'])]
     public float $price;
 
-    #[HasMany(target: Category::class)]
-    public array $categories;
+    #[BelongsTo(target: Category::class, foreignKey: 'category_id')]
+    public function category() {}
+
+    #[HasMany(target: Review::class, foreignKey: 'product_id')]
+    public function reviews() {}
 }
 ```
 
 **Dynamic Form Generation:**
 ```php
-// Generate form from metadata
+// Generate form automatically from metadata
 $form = form()->make(Product::class);
 echo $form->render();
 
 // Auto-validation from metadata
-$validator = metadata()->validate(Product::class, $request->all());
+$rules = metadata()->getValidationRules(Product::class);
 ```
 
-**Relationships:**
-- `#[HasOne]`, `#[HasMany]`
+**Available Attributes:**
+- `#[Table]` - Define table name
+- `#[Field]` - Field properties and validation
+- `#[HasOne]`, `#[HasMany]` - Relationships
 ### Service Providers
 
 Service providers are the central place to register services. They have two methods:
@@ -120,67 +197,12 @@ class PaymentServiceProvider extends ServiceProvider
 Providers are auto-discovered from `app/Providers/` directory.
 
 ### Plugins
+- `#[BelongsTo]`, `#[BelongsToMany]` - Inverse relationships
+- `#[MorphTo]`, `#[MorphOne]`, `#[MorphMany]` - Polymorphic
 
-Plugins provide a way to extend functionality without modifying core code:
+### 🛠️ CLI Tools (`php neo`)
 
-```php
-class BlogPlugin extends Plugin
-{
-    public function install(): void {
-        // Create tables, copy files, etc.
-    }
-    
-    public function boot(): void {
-        // Register routes, views, etc.
-    }
-    
-    public function uninstall(): void {
-        // Cleanup
-    }
-}
-```
-
-Plugins can use hooks to interact with the system:
-
-```php
-HookManager::addAction('user.created', function($user) {
-    Mail::send($user->email, 'Welcome!');
-});
-
-HookManager::addFilter('response.headers', function($headers) {
-    $headers['X-Custom'] = 'Value';
-    return $headers;
-});
-```
-
-### Metadata
-
-Use PHP 8 attributes to define models declaratively:
-
-```php
-#[Table('users')]
-class User
-{
-    #[Field(type: 'int', primaryKey: true, autoIncrement: true)]
-    public int $id;
-    
-    #[Field(type: 'varchar', length: 255, nullable: false)]
-    #[Validation(['required', 'email'])]
-    public string $email;
-    
-    #[HasMany(target: Post::class, foreignKey: 'user_id')]
-    public array $posts;
-}
-```
-
-This metadata can be used to generate forms, validation rules, or database schemas.
-
-## CLI Tools
-
-The `neo` command provides code generation and database tools.
-
-### Code Generation
-
+**Code Generators:**
 ```bash
 php neo make:controller UserController
 php neo make:model Product -m
@@ -191,19 +213,16 @@ php neo make:plugin Blog
 php neo make:command ProcessDataCommand
 ```
 
-### Migrations
-
+**Migration System:**
 ```bash
-php neo migrate                 # Run pending migrations
-php neo migrate:rollback        # Rollback last batch
-php neo migrate:reset           # Rollback all migrations
-php neo migrate:refresh         # Reset and re-run all
-php neo migrate:fresh           # Drop all tables and re-run
-php neo migrate:status          # Show migration status
+php neo migrate                    # Run migrations
+php neo migrate:rollback          # Rollback last batch
+php neo migrate:status            # Show status
+php neo migrate:refresh           # Reset + re-run
+php neo migrate:fresh             # Drop all + re-run
 ```
 
-Create migrations using the schema builder:
-
+**Schema Builder:**
 ```php
 Schema::create('products', function (Blueprint $table) {
     $table->id();
@@ -212,9 +231,11 @@ Schema::create('products', function (Blueprint $table) {
     $table->text('description')->nullable();
     $table->timestamps();
     
+    // Indexes
     $table->index('name');
     $table->unique('sku');
     
+    // Foreign keys
     $table->foreign('category_id')
         ->references('id')
         ->on('categories')
@@ -222,84 +243,111 @@ Schema::create('products', function (Blueprint $table) {
 });
 ```
 
-### Other Commands
-
+**Other Commands:**
 ```bash
-php neo serve               # Start development server
-php neo cache:clear        # Clear application cache
-php neo db:seed            # Run database seeders
-php neo plugin:list        # List installed plugins
+php neo serve                     # Development server
+php neo cache:clear              # Clear cache
+php neo db:seed                  # Run seeders
+php neo plugin:list              # List plugins
 ```
 
-## Installation
+---
+
+## 🚀 Quick Start
+
+### Installation
 
 ```bash
+# Clone repository
 git clone https://github.com/neonextechnologies/neophp.git
 cd neophp
+
+# Install dependencies
 composer install
+
+# Setup environment
 cp .env.example .env
+
+# Configure database in .env
+nano .env
+
+# Run migrations
 php neo migrate
+
+# Start development server
 php neo serve
 ```
 
-Visit http://localhost:8000
+Visit: http://localhost:8000
 
-## Usage
+---
 
-### Using Contracts
+## 📚 Usage Examples
 
-Inject interfaces instead of concrete classes:
+### 1. Service Provider Pattern
 
 ```php
-class UserRepository
+// app/Providers/PaymentServiceProvider.php
+class PaymentServiceProvider extends ServiceProvider
 {
-    public function __construct(
-        private DatabaseInterface $db,
-        private CacheInterface $cache
-    ) {}
-    
-    public function find(int $id): ?User {
-        return $this->cache->remember("user.$id", function() use ($id) {
-            return $this->db->query(
-                'SELECT * FROM users WHERE id = ?',
-                [$id]
+    public function register(): void
+    {
+        $this->app->singleton('payment', function ($app) {
+            return new StripePayment(
+                config('payment.stripe_key')
             );
         });
     }
+    
+    public function boot(): void
+    {
+        // Load config, routes, views
+    }
+    
+    public function provides(): array
+    {
+        return ['payment'];
+    }
 }
 
-}
+// Usage
+$payment = app('payment');
+$payment->charge(100, 'usd', $token);
+```
 
-### Creating a Plugin
+### 2. Plugin System
 
 ```php
+// plugins/blog/BlogPlugin.php
 class BlogPlugin extends Plugin
 {
     protected string $name = 'blog';
     protected string $version = '1.0.0';
     
-    public function install(): void {
-        Schema::create('posts', function (Blueprint $table) {
-            $table->id();
-            $table->string('title');
-            $table->text('content');
-            $table->timestamps();
-        });
-    }
-    
-    public function boot(): void {
+    public function boot(): void
+    {
+        // Add hooks
         HookManager::addAction('app.boot', [$this, 'registerRoutes']);
+        HookManager::addFilter('menu.items', [$this, 'addMenuItem']);
     }
     
-    public function registerRoutes(): void {
+    public function registerRoutes(): void
+    {
         Route::get('/blog', [BlogController::class, 'index']);
+    }
+    
+    public function addMenuItem(array $items): array
+    {
+        $items[] = ['title' => 'Blog', 'url' => '/blog'];
+        return $items;
     }
 }
 ```
 
-### Metadata-Driven Forms
+### 3. Metadata-Driven Forms
 
 ```php
+// app/Models/Product.php
 #[Table('products')]
 class Product
 {
@@ -313,32 +361,224 @@ class Product
 
     #[BelongsTo(target: Category::class)]
     public ?Category $category;
+
+    #[HasMany(target: Review::class)]
+    public array $reviews;
 }
 
 // Generate form automatically
 $form = form()->make(Product::class);
 echo $form->render();
+
+// Auto-validation
+$metadata = metadata()->getModelMetadata(Product::class);
+$rules = $metadata['validationRules'];
 ```
 
-## Documentation
+### 4. CLI Code Generation
 
-- [Foundation Guide](docs/FOUNDATION_GUIDE.md) - Core architecture and patterns
-- [CLI Guide](docs/CLI_GUIDE.md) - Command reference
-- [Contributing](CONTRIBUTING.md) - Contribution guidelines
+```bash
+# Create model with migration
+php neo make:model Product -m
 
-## Architecture
+# Edit migration
+# database/migrations/2024_11_26_123456_create_products_table.php
 
-NeoPhp follows these principles:
+# Run migration
+php neo migrate
 
-- **Contracts First** - Define behavior through interfaces
-- **Service Providers** - Register and bootstrap services
-- **Plugins** - Extend without modifying core
-- **Metadata** - Declarative configuration via attributes
-- **CLI Tools** - Generate boilerplate code
+# Create controller
+php neo make:controller ProductController
 
-This gives you flexibility to build what you need without being locked into specific implementations.
+# Create custom command
+php neo make:command ImportProductsCommand
+```
 
-## License
+### 5. Schema Builder
+
+```php
+// database/migrations/2024_11_26_123456_create_orders_table.php
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('orders', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')
+                ->constrained()
+                ->onDelete('cascade');
+            $table->decimal('total', 10, 2);
+            $table->enum('status', ['pending', 'completed', 'cancelled']);
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+            
+            $table->index('status');
+            $table->index(['user_id', 'status']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('orders');
+    }
+};
+```
+
+---
+
+## 🏗️ Project Structure
+
+```
+neophp/
+├── neo                          # CLI Runner (php neo)
+├── src/
+│   ├── Contracts/              # Pure Interfaces (10 contracts)
+│   │   ├── DatabaseInterface.php
+│   │   ├── CacheInterface.php
+│   │   └── ...
+│   ├── Foundation/             # Service Provider System
+│   │   ├── ServiceProvider.php
+│   │   ├── ProviderManager.php
+│   │   └── Providers/
+│   ├── Plugin/                 # Plugin Architecture
+│   │   ├── Plugin.php
+│   │   ├── PluginManager.php
+│   │   └── HookManager.php
+│   ├── Metadata/               # Metadata System
+│   │   ├── Table.php
+│   │   ├── Field.php
+│   │   ├── Relations.php
+│   │   └── MetadataRepository.php
+│   ├── Forms/                  # Dynamic Form Builder
+│   │   └── FormBuilder.php
+│   ├── Console/                # CLI Framework
+│   │   ├── Application.php
+│   │   ├── Command.php
+│   │   └── Commands/           # 20+ built-in commands
+│   ├── Generator/              # Code Generator
+│   │   ├── Generator.php
+│   │   └── stubs/              # 7 stub templates
+│   └── Database/
+│       ├── Migrations/         # Migration System
+│       │   ├── Migration.php
+│       │   └── Migrator.php
+│       └── Schema/             # Schema Builder
+│           ├── Schema.php
+│           ├── Blueprint.php
+│           └── ...
+├── app/
+│   ├── Controllers/
+│   ├── Models/
+│   ├── Providers/
+│   ├── Middleware/
+│   └── Console/Commands/
+├── database/
+│   ├── migrations/
+│   └── seeders/
+├── plugins/                    # Plugin directory
+├── config/                     # Configuration files
+├── docs/                       # Documentation
+│   ├── FOUNDATION_GUIDE.md
+│   ├── CLI_GUIDE.md
+│   └── README.md
+└── examples/                   # Working examples
+```
+
+---
+
+## 🎯 Use Cases
+
+### 1. Build Custom Framework
+Use NeoPhp as foundation to build your own framework:
+```
+Your Custom Framework
+├── NeoPhp Foundation (Contracts + Providers + Plugins)
+├── Your Custom Services
+├── Your Domain Logic
+└── Your Business Rules
+```
+
+### 2. Metadata-Driven CRUD
+Generate admin panels from model metadata:
+```php
+#[Table('products')]
+class Product { ... }
+
+// Auto-generate:
+- List page with DataTables
+- Create/Edit forms
+- Validation rules
+- API endpoints
+```
+
+### 3. Plugin-Based Architecture
+Build extensible applications:
+```
+Core Application
+├── Authentication Plugin
+├── E-commerce Plugin
+├── Blog Plugin
+├── Analytics Plugin
+└── Custom Plugins
+```
+
+### 4. Rapid Prototyping
+Quick development with CLI:
+```bash
+php neo make:model Order -m
+php neo make:controller OrderController
+php neo migrate
+php neo serve
+```
+
+---
+
+## 📚 Documentation
+
+- **[Foundation Guide](docs/FOUNDATION_GUIDE.md)** - Core architecture and patterns
+- **[CLI Guide](docs/CLI_GUIDE.md)** - Command reference and usage
+- **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Development Setup
+
+```bash
+git clone https://github.com/neonextechnologies/neophp.git
+cd neophp
+composer install
+composer dump-autoload
+```
+
+---
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- **Neonex Core** - Foundation architecture inspiration
+- **Laravel** - Service provider pattern and CLI design
+- **WordPress** - Plugin hook system
+
+---
+
+<div align="center">
+
+**Built with ❤️ by [Neonex Technologies](https://neonex.co.th)**
+
+[![GitHub Stars](https://img.shields.io/github/stars/neonextechnologies/neophp?style=social)](https://github.com/neonextechnologies/neophp)
+[![GitHub Issues](https://img.shields.io/github/issues/neonextechnologies/neophp)](https://github.com/neonextechnologies/neophp/issues)
+
+</div>
 
 MIT License. See [LICENSE](LICENSE) for details.
 
